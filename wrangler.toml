@@ -1,5 +1,5 @@
 # wrangler.toml
-name = "uptime-monitor-ping"
+name = "keep-awake"
 main = "src/ping.js"
 compatibility_date = "2025-11-24"
 
