@@ -21,8 +21,17 @@ export default {
   },
 
   async fetch(request, env) {
-    // Вече НЕ записва — само връща инфо, за да не дублира cron-а
-    return new Response("Ping worker active - cron only", {
+    // Ръчно пингване през браузър (НЕ записва в KV)
+    let status = "unknown";
+
+    try {
+      const resp = await fetch(env.BACKEND_URL);
+      status = resp.ok ? "up" : "down";
+    } catch {
+      status = "down";
+    }
+
+    return new Response(`Ping executed manually → status: ${status}`, {
       headers: { "Content-Type": "text/plain" }
     });
   }
