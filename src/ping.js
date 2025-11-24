@@ -2,7 +2,7 @@
 // Пингва бекенда и записва резултата в KV
 
 export default {
-  async fetch(request, env) {
+  async scheduled(event, env, ctx) {
     // Ping се извършва автоматично от Cron, не се използва fetch от браузър
     const now = new Date().toISOString();
     let status = "unknown";
@@ -18,9 +18,12 @@ export default {
     const value = JSON.stringify({ status, timestamp: now });
 
     await env.UPTIME_LOG.put(key, value);
+  },
 
-    return new Response(JSON.stringify({ status, timestamp: now }), {
-      headers: { "Content-Type": "application/json" }
+  async fetch(request, env) {
+    // Вече НЕ записва — само връща инфо, за да не дублира cron-а
+    return new Response("Ping worker active – cron only", {
+      headers: { "Content-Type": "text/plain" }
     });
   }
 };
