@@ -1,17 +1,19 @@
 // src/ping.js
-// Ping Worker – Cron записва, fetch проверява live статус
-
 export default {
   async scheduled(event, env) {
-    // Cron – записва резултат в KV
     const now = new Date().toISOString();
     let status = "unknown";
 
     try {
       const resp = await fetch(env.BACKEND_URL);
       if (resp.ok) {
-        const data = await resp.json();
-        status = data.status === "ok" ? "up" : "down";
+        const text = await resp.text(); // взимаме текст първо
+        try {
+          const data = JSON.parse(text);
+          status = data.status && data.status.toLowerCase() === "ok" ? "up" : "down";
+        } catch {
+          status = "down"; // ако не е валиден JSON
+        }
       } else {
         status = "down";
       }
@@ -25,14 +27,18 @@ export default {
   },
 
   async fetch(request, env) {
-    // Fetch – проверява бекенда на момента, не записва
     let status = "unknown";
 
     try {
       const resp = await fetch(env.BACKEND_URL);
       if (resp.ok) {
-        const data = await resp.json();
-        status = data.status === "ok" ? "up" : "down";
+        const text = await resp.text();
+        try {
+          const data = JSON.parse(text);
+          status = data.status && data.status.toLowerCase() === "ok" ? "up" : "down";
+        } catch {
+          status = "down";
+        }
       } else {
         status = "down";
       }
