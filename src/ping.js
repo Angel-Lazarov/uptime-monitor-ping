@@ -9,7 +9,12 @@ export default {
 
     try {
       const resp = await fetch(env.BACKEND_URL);
-      status = resp.ok ? "up" : "down";
+      if (resp.ok) {
+        const data = await resp.json();
+        status = data.status === "ok" ? "up" : "down";
+      } else {
+        status = "down";
+      }
     } catch {
       status = "down";
     }
@@ -25,7 +30,12 @@ export default {
 
     try {
       const resp = await fetch(env.BACKEND_URL);
-      status = resp.ok ? "up" : "down";
+      if (resp.ok) {
+        const data = await resp.json();
+        status = data.status === "ok" ? "up" : "down";
+      } else {
+        status = "down";
+      }
     } catch {
       status = "down";
     }
