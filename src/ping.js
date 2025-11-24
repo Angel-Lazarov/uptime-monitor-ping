@@ -1,8 +1,9 @@
 // src/ping.js
-// Ping Worker – записва статус в KV при Cron
+// Ping Worker – Cron записва, fetch проверява live статус
 
 export default {
   async scheduled(event, env) {
+    // Cron – записва резултат в KV
     const now = new Date().toISOString();
     let status = "unknown";
 
@@ -19,9 +20,21 @@ export default {
   },
 
   async fetch(request, env) {
-    // Само връща, че пинга е активен
-    return new Response("Ping executed → check status page for results", {
-      headers: { "Content-Type": "text/plain" }
-    });
+    // Fetch – проверява бекенда на момента, не записва
+    let status = "unknown";
+
+    try {
+      const resp = await fetch(env.BACKEND_URL);
+      status = resp.ok ? "up" : "down";
+    } catch {
+      status = "down";
+    }
+
+    return new Response(
+      `Ping executed → check status page for results\nCurrent status: ${status}`,
+      {
+        headers: { "Content-Type": "text/plain;charset=UTF-8" }
+      }
+    );
   }
 };
