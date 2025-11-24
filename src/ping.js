@@ -22,7 +22,7 @@ export default {
 
   async fetch(request, env) {
     // Вече НЕ записва — само връща инфо, за да не дублира cron-а
-    return new Response("Ping worker active – cron only", {
+    return new Response("Ping worker active - cron only", {
       headers: { "Content-Type": "text/plain" }
     });
   }
