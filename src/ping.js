@@ -1,11 +1,23 @@
 // src/ping.js
-// Ping Worker – Cron записва, fetch проверява live статус
+// Ping Worker – Cron записва, fetch проверява live статус, с групово почистване на стар месец
 
 export default {
   async scheduled(event, env) {
     const result = await pingBackend(env.BACKEND_URL);
-    const key = `ping:${result.timestamp}`;
+
+    // Префикс по текущ месец
+    const monthKey = result.timestamp.slice(0, 7); // "YYYY-MM"
+    const key = `ping:${monthKey}:${result.timestamp}`;
+
     await env.UPTIME_LOG.put(key, JSON.stringify(result));
+
+    // Ако е 1-во число, изтриваме ключовете от най-стария месец
+    const today = new Date(result.timestamp);
+    if (today.getDate() === 1) {
+      const oldestMonth = getOldestMonth(today);
+      const list = await env.UPTIME_LOG.list({ prefix: `ping:${oldestMonth}` });
+      await Promise.all(list.keys.map(k => env.UPTIME_LOG.delete(k.name)));
+    }
   },
 
   async fetch(request, env) {
@@ -38,4 +50,12 @@ async function pingBackend(url) {
   }
 
   return { status, timestamp };
+}
+
+// helper за изчисляване на най-стария месец (предходния месец)
+function getOldestMonth(date) {
+  const d = new Date(date);
+  d.setMonth(d.getMonth() - 2); // два месеца назад
+  const month = d.getMonth() + 1;
+  return `${d.getFullYear()}-${month.toString().padStart(2, "0")}`;
 }
