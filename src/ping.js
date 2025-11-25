@@ -44,12 +44,28 @@ async function pingBackend(url) {
     if (data.status?.toLowerCase() === "ok") {
       status = "up";
     }
-    timestamp = new Date(data.timestamp).toISOString();
+
+    // Тук преобразуваме време от бекенда към Europe/Sofia
+    timestamp = convertToSofia(data.timestamp);
+
   } catch {
     // ако има грешка или timeout, status остава down
   }
 
   return { status, timestamp };
+}
+
+// helper – конвертира UTC timestamp към Europe/Sofia, в ISO-подобен формат
+function convertToSofia(ts) {
+  const d = new Date(ts);
+
+  // връща форматирано "YYYY-MM-DDTHH:mm:ssZ" в Софийска зона
+  const local = d.toLocaleString("sv-SE", {
+    timeZone: "Europe/Sofia",
+    hour12: false
+  });
+
+  return local.replace(" ", "T") + "Z";
 }
 
 // helper за изчисляване на най-стария месец (предходния месец)
