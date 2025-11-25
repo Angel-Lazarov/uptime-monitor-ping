@@ -11,11 +11,17 @@ export default {
 
     await env.UPTIME_LOG.put(key, JSON.stringify(result));
 
-    // Ако е 1-во число, изтриваме ключовете от най-стария месец
+    // Софийско време cleanup window: 12:00–12:59
     const today = new Date(result.timestamp);
-    if (today.getDate() === 1) {
+    if (today.getHours() === 12) {
       const oldestMonth = getOldestMonth(today);
-      const list = await env.UPTIME_LOG.list({ prefix: `ping:${oldestMonth}` });
+
+      // Ограничаваме до 100 триения на едно изпълнение
+      const list = await env.UPTIME_LOG.list({
+        prefix: `ping:${oldestMonth}`,
+        limit: 100
+      });
+
       await Promise.all(list.keys.map(k => env.UPTIME_LOG.delete(k.name)));
     }
   },
@@ -71,7 +77,14 @@ function convertToSofia(ts) {
 // helper за изчисляване на най-стария месец (предходния месец)
 function getOldestMonth(date) {
   const d = new Date(date);
-  d.setMonth(d.getMonth() - 2); // два месеца назад
-  const month = d.getMonth() + 1;
-  return `${d.getFullYear()}-${month.toString().padStart(2, "0")}`;
+
+  // Ако текущият месец е януари (0), връщаме декември на предходната година
+  let year = d.getFullYear();
+  let month = d.getMonth() - 2; // два месеца назад
+  if (month < 0) {
+    month += 12;
+    year -= 1;
+  }
+
+  return `${year}-${(month + 1).toString().padStart(2, "0")}`;
 }
